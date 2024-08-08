@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件列表</title>
+</head>
+<body>
+<div>
+    <h1>文件列表</h1>
+    <ul id="fileList"></ul>
+</div>
+<div>
+    <a href="upload.html"></a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/auth/file') // 替换为实际的 API 地址
+            .then(response => response.json())
+            .then(data => {
+                const fileList = document.getElementById('fileList');
+                data.forEach(file => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                            <h3>${file.file_name}</h3>
+                            文件大小: ${file.file_size} Byte
+                            校验和: ${file.checksum}</p>
+                            文件保存目录>${file.file_addr}
+                              <button onclick="downloadFile('${file.checksum}')">下载</button>
+                        `;
+                    fileList.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error('Error fetching files:', error));
+    });
+
+    function downloadFile(checksum) {
+        // 构建下载链接
+        const downloadUrl = `http://localhost:9090/auth/download?file=${checksum}`;
+        // 发起下载请求
+        fetch(downloadUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob(); // 解析为 Blob
+            })
+            .then(blob => {
+                // 创建一个 URL 对象
+                const url = window.URL.createObjectURL(blob);
+                // 创建一个<a>元素
+                const a = document.createElement('a');
+                // 设置链接的下载属性
+                a.href = url;
+                a.download = checksum; // 可根据需要设置文件名
+                document.body.appendChild(a);
+                // 触发点击事件
+                a.click();
+                // 清理工作：移除元素和释放 URL 对象
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error downloading file:', error));
+    }
+</script>
+</body>
+</html>

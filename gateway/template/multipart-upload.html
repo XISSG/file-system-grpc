@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快传</title>
+</head>
+<body>
+<h3>快传页面</h3>
+<input type="file" id="fileInput" multiple />
+<button id="uploadButton">Upload</button>
+<br/>
+<a href="/auth/index-view">首页</a>
+<script>
+    document.getElementById('uploadButton').addEventListener('click', async () => {
+        const files = document.getElementById('fileInput').files;
+        for (const file of files) {
+            const chunkSize = 1024 * 1024 * 50; // 1MB per chunk
+            const totalChunks = Math.ceil(file.size / chunkSize);
+
+            // Calculate SHA-1 hash
+            const hash = await calculateSHA1(file);
+
+            for (let i = 0; i < totalChunks; i++) {
+                const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
+                const formData = new FormData();
+
+                formData.append('file', chunk);
+                formData.append('fileName', file.name);
+                formData.append('chunk', i + 1);
+                formData.append('total', totalChunks);
+                formData.append('checksum', hash); // 传递 SHA-1 校验和
+
+                // Send the chunk to the server
+                await fetch('/auth/multipart-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+        }
+    });
+
+    async function calculateSHA1(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-1', arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
+</script>
+</body>
+</html>

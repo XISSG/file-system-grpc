@@ -1,0 +1,91 @@
+syntax = "proto3";
+package transfer;
+option go_package = "../internal;internal";
+
+service UserService {
+  rpc Register(Account) returns(RegisterStatus);
+  rpc Login(Account) returns(LoginStatus);
+  rpc CheckToken(Token) returns(CheckStatus);
+}
+
+message Account{
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterStatus{
+  bool success = 1;
+}
+
+message LoginStatus{
+  string tokenStr = 1;
+  bool success = 2;
+}
+
+message Token{
+  string tokenStr = 1;
+}
+
+message CheckStatus {
+  bool success = 1;
+  int64 userId = 2;
+}
+
+message UserName {
+  string username = 1;
+}
+
+message User{
+  int64 id = 1;
+  string username = 2;
+  string password = 3;
+  int64 status = 4;
+}
+service DBService {
+  rpc AddUser(User) returns (UserStatus);
+  rpc GetUser(UserName) returns (User);
+  rpc CheckUserExist(UserName) returns(OK);
+  rpc AddFile(File) returns (FileStatus);
+  rpc GetFileByChecksum(Checksum) returns (File);
+  rpc GetFileByUserID(UserID) returns(Files);
+  rpc UpdateFileStatus(UpdateRequest) returns (FileStatus);
+  rpc DeleteFile(Checksum) returns (FileStatus);
+}
+
+message UserStatus{
+  bool success = 1;
+}
+
+message OK {
+  bool exist = 1;
+}
+
+message Files {
+  repeated File file = 1;
+}
+
+message File{
+  int64 id = 1;
+  string fileName = 2;
+  int64 fileSize = 3;
+  string checksum = 4;
+  string fileAddr = 5;
+  int64 status = 6;
+  int64 userId = 7;
+}
+message FileStatus{
+  bool success = 1;
+}
+
+message Checksum{
+  string checksum = 1;
+}
+
+message UserID{
+  int64 userId = 1;
+}
+
+message UpdateRequest{
+  string checksum = 1;
+  int64 status = 2;
+}

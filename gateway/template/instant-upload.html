@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>秒传页面</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+</head>
+<body>
+<h3>秒传页面</h3>
+<input type="file" id="fileInput">
+<button id="uploadButton">上传</button>
+<br/>
+<a href="/auth/index-view">首页</a>
+<script>
+    document.getElementById('uploadButton').onclick = async () => {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert("请选择一个文件。");
+            return;
+        }
+
+        // 创建文件读取器
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            // 获取文件内容
+            const fileContent = event.target.result;
+
+            // 计算SHA-1校验和
+            const sha1Hash = CryptoJS.SHA1(CryptoJS.lib.WordArray.create(event.target.result)).toString();
+
+            // 使用 GET 请求发送校验和
+            const response = await fetch(`/auth/instant-upload?checksum=${encodeURIComponent(sha1Hash)}`, {
+                method: 'GET',
+            });
+
+            if (response.ok) {
+                alert("校验和已成功发送！");
+            } else {
+                alert("发送校验和失败！");
+            }
+        };
+
+        // 读取文件为 ArrayBuffer
+        reader.readAsArrayBuffer(file);
+    };
+</script>
+</body>
+</html>
